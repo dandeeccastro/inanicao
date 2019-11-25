@@ -1,0 +1,36 @@
+- Regra do jogo
+
+	- Mais de um leitor pode ler ao mesmo tempo
+	- Só um escritor pode escrever de cada vez
+	- Leitores e escritores não podem "coexistir" no acesso à variável compartilhada
+	- O programa tem que garantir a ausência de inanição das threads
+	- Variável compartilhada: um inteiro normal
+
+	- Escritoras: 
+		- Escrevem seu id na variável compartilhada
+
+	- Leitoras: 
+		- Cada uma tem um arquivo específico
+		- Deve escrever o valor encontrado na variável dentro do arquivo
+
+	- Log de saída
+		- Um arquivo para registrar todas as operações feitas no sistema
+		- Será feita junto a um programa auxiliar que verificará, a partir do log, se a execução deu certo ou não
+		- Thread principal inicializa as outras threads e só termina quando o log terminar de ser escrito
+		- Threading: C ou Java
+		- Programa Auxiliar: Linguagem de sua escolha
+
+	- Input
+		- Quantidade de threads leitoras
+		- Quant. de escritoras
+		- Número de leituras
+		- Número de escritas
+		- Nome do arquivo de log
+	- O arquivo da thread leitora tem o nome <id da thread>.txt (ex.: 5.txt)
+	- Programa aux. deverá executar de forma sequencial o que foi feito no de threading
+	- Deu erro? Aponta onde foi q deu ruim
+	- Não deu erro? Destaca os pontos onde a estratégia para inibir a inanição foi ativada
+
+	- Entregáveis
+		- Git com código fonte e readme
+		- Relatório da execução

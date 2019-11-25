@@ -6,10 +6,36 @@
 #define NTHREADS 4
 #define BOOKSIZE 100
 
-int book[BOOKSIZE];
+int book;
 
-void * Leitora ( void * arg ){}
-void * Escritora ( void * arg ){}
+void EntraLeitura(){
+	int i;
+	printf("%d\n",book[i]);
+}
+
+void SaiLeitura(){
+	printf("Terminei de ler!\n");
+}
+
+void EntraEscrita(int dado){
+	int i;
+	for ( i = 0; i < BOOKSIZE; i++)
+		book[i] = dado;
+}
+
+void SaiEscrita(){
+	printf("Minha obra prima está pronta!\n");
+}
+
+void * Leitora ( void * arg ){
+	EntraLeitura();
+	SaiLeitura();
+}
+
+void * Escritora ( void * arg ){
+	EntraEscrita();
+	SaiEscrita();
+}
 
 int main (int argc, char *argv[]) {
 	int i; pthread_t threads[NTHREADS];
