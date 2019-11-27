@@ -1,11 +1,14 @@
 Esc 1 entrou
-Leit 1 entrou
-Var 2
-Var 1
+Esc 1 leu 2
+Esc 1 escreveu 3
 Esc 1 saiu
 Leit 1 entrou
 Leit 2 entrou
-Var 2
-Var 1
+Leit 1 leu 2
+Leit 2 leu 1
+Esc 3 entrou
+Esc 3 leu 2
+Esc 3 escreveu 1
 Leit 2 saiu
 Leit 1 saiu
+Esc 3 saiu
