@@ -1,14 +1,14 @@
-Esc 1 entrou
-Esc 1 leu 2
-Esc 1 escreveu 3
-Esc 1 saiu
-Leit 1 entrou
-Leit 2 entrou
-Leit 1 leu 2
-Leit 2 leu 1
-Esc 3 entrou
-Esc 3 leu 2
-Esc 3 escreveu 1
-Leit 2 saiu
-Leit 1 saiu
-Esc 3 saiu
+Leit  1  entrou
+Leit  1  leu  0 
+Leit  1  saiu
+Esc  2  entrou
+Esc  2  leu  0 
+Esc  2  escreveu  1 
+Esc  2  saiu
+Leit  3  entrou
+Leit  3  leu  2 
+Leit  3  saiu
+Esc  0  entrou
+Esc  0  leu  3 
+Esc  0  escreveu  0 
+Esc  0  saiu
