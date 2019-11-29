@@ -10,38 +10,40 @@ int leituras, escritas;
 
 void EntraLeitura(int id){ 
 
+	// Variáveis da função
 	FILE *arq_temp;
 	char *arq_name;
 
-	fprintf(pont_arq, "%s %d %s", "Leit ", id, " entrou\n"); 
-	fprintf(pont_arq, "%s %d %s %d %s", "Leit ", id, " leu ", book, "\n");
+	// Lendo o valor da variável 
+	fprintf(pont_arq, "Leit %d entrou\n", id); 
+	fprintf(pont_arq, "Leit %d leu %d\n", id, book);
 
+	// Callocando espaço para as variáveis 
 	arq_temp = calloc(sizeof(FILE*),1);
 	arq_name = calloc(sizeof(char),10);
 	
+	// Abro o arquivo com o nome correto e escrevo o 
+	// conteúdo da variável 
 	sprintf(arq_name,"%d.txt",id);
 	arq_temp = fopen(arq_name,"a+");
 	fprintf(arq_temp,"%d\n",book);
 	fclose(arq_temp);
-///	leituras--;
 }
 
 void SaiLeitura(int id ){
-	fprintf(pont_arq, "%s %d %s", "Leit ", id, " saiu\n");
-
+	fprintf(pont_arq, "Leit %d saiu\n",id);
 }
 
 void EntraEscrita(int id){
-	 
-	fprintf(pont_arq, "%s %d %s", "Esc ", id , " entrou\n"); fprintf(pont_arq, "%s %d %s %d %s", "Esc ", id, " leu ", book, "\n");
+	// Entra na variável, le e escreve o seu id
+	fprintf(pont_arq, "Esc %d entrou\n", id); 
+	fprintf(pont_arq, "Esc %d leu %d\n", id, book);
 	book = id;
-///	escritas--;
-	fprintf(pont_arq, "%s %d %s %d %s", "Esc ", id, " escreveu ", book, "\n");
+	fprintf(pont_arq, "Esc %d escreveu %d\n", id, book);
 	
 }
 void SaiEscrita(int id ){ 
-	fprintf(pont_arq, "%s %d %s", "Esc ", id, " saiu\n");
-	
+	fprintf(pont_arq, "Esc %d saiu\n",id);
 }
 
 void * Leitora ( void * arg ){
@@ -49,9 +51,11 @@ void * Leitora ( void * arg ){
 	int *id = (int *) arg; 
 	while(1) {
 		pthread_mutex_lock(&mutex1);
+		// Se ainda não acabaram as leituras, dou unlock e saio do loop 
 		if(leituras <= 0){
 			pthread_mutex_unlock(&mutex1);
 			break;
+		// Senão, leio
 		} else { 
 			EntraLeitura(*id); 
 			leituras--;
