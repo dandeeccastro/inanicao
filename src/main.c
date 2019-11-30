@@ -4,9 +4,9 @@
 #include <pthread.h>
 
 int book;
-pthread_mutex_t mutex1;
 FILE *pont_arq;
 int leituras, escritas;
+sem_t escr_mutex, leit_mutex, gen_mutex, escr_cond, leit_cond;
 
 void EntraLeitura(int id){ 
 
@@ -50,17 +50,17 @@ void * Leitora ( void * arg ){
  
 	int *id = (int *) arg; 
 	while(1) {
-		pthread_mutex_lock(&mutex1);
+		sem_wait(gen_mutex);
 		// Se ainda não acabaram as leituras, dou unlock e saio do loop 
 		if(leituras <= 0){
-			pthread_mutex_unlock(&mutex1);
+			sem_post(gen_mutex);
 			break;
 		// Senão, leio
 		} else { 
 			EntraLeitura(*id); 
 			leituras--;
 			SaiLeitura(*id); 
-			pthread_mutex_unlock(&mutex1);
+			sem_post(gen_mutex);
 		}
 	}	
 	pthread_exit(NULL);
@@ -70,16 +70,16 @@ void * Escritora ( void * arg ){
 	int *id = (int *) arg; 
 	while(1){
 
-		pthread_mutex_lock(&mutex1);
+		sem_wait(gen_mutex);
 		if (escritas <= 0){
-			pthread_mutex_unlock(&mutex1);
+			sem_post(gen_mutex);
 			break;
 		}
 		else{
 			EntraEscrita(*id); 
 			escritas--;
 			SaiEscrita(*id);
-			pthread_mutex_unlock(&mutex1);
+			sem_post(gen_mutex);
 		}
 	}
 	pthread_exit(NULL);
@@ -94,8 +94,9 @@ int main (int argc, char *argv[]) {
 	leituras = atoi(argv[4]);
 	escritas = atoi(argv[5]);
 
+	sem_init(&gen_mutex,0,1);
+
 	pthread_t threads[quant_escr + quant_leit]; 
-	pthread_mutex_init(&mutex1, NULL);
 
 	printf("Inicio da main\n");
 
