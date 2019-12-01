@@ -150,7 +150,7 @@ int main( int argc, char * argv[]){
 	quant_escritoras = atoi(argv[2]);
 	num_leituras = atoi(argv[3]);
 	num_escritas = atoi(argv[4]);
-	fopen(argv[5],"w+");
+	log_file = fopen(argv[5],"w+");
 
 	sem_init(&mutex_escr,0,1);
 	sem_init(&mutex_leit,0,1);

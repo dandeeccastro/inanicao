@@ -90,7 +90,7 @@ void * Escritora ( void * arg ){
 int main (int argc, char *argv[]) { 
 	int i, *t; 
 
-	pont_arq = fopen(argv[1], "w");
+	pont_arq = fopen(argv[1], "w+");
 	int quant_leit = atoi( argv[2]);
 	int quant_escr = atoi(argv[3]);
 	leituras = atoi(argv[4]);
