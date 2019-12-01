@@ -6,7 +6,7 @@
 int book;
 FILE *pont_arq;
 int leituras, escritas;
-sem_t escr_mutex, leit_mutex, gen_mutex, escr_cond, leit_cond;
+sem_t gen_mutex, escr_mutex, leit_mutex;
 
 void EntraLeitura(int id){ 
 
@@ -14,6 +14,7 @@ void EntraLeitura(int id){
 	FILE *arq_temp;
 	char *arq_name;
 
+	sem_wait(&gen_mutex);
 	// Lendo o valor da variável 
 	fprintf(pont_arq, "Leit %d entrou\n", id); 
 	fprintf(pont_arq, "Leit %d leu %d\n", id, book);
@@ -32,9 +33,11 @@ void EntraLeitura(int id){
 
 void SaiLeitura(int id ){
 	fprintf(pont_arq, "Leit %d saiu\n",id);
+	sem_post(&gen_mutex);
 }
 
 void EntraEscrita(int id){
+	sem_wait(&gen_mutex);
 	// Entra na variável, le e escreve o seu id
 	fprintf(pont_arq, "Esc %d entrou\n", id); 
 	fprintf(pont_arq, "Esc %d leu %d\n", id, book);
@@ -44,23 +47,23 @@ void EntraEscrita(int id){
 }
 void SaiEscrita(int id ){ 
 	fprintf(pont_arq, "Esc %d saiu\n",id);
+	sem_post(&gen_mutex);
 }
 
 void * Leitora ( void * arg ){
- 
 	int *id = (int *) arg; 
 	while(1) {
-		sem_wait(gen_mutex);
+		sem_wait(&leit_mutex);
 		// Se ainda não acabaram as leituras, dou unlock e saio do loop 
 		if(leituras <= 0){
-			sem_post(gen_mutex);
+			sem_post(&leit_mutex);
 			break;
 		// Senão, leio
 		} else { 
 			EntraLeitura(*id); 
 			leituras--;
 			SaiLeitura(*id); 
-			sem_post(gen_mutex);
+			sem_post(&leit_mutex);
 		}
 	}	
 	pthread_exit(NULL);
@@ -69,17 +72,16 @@ void * Leitora ( void * arg ){
 void * Escritora ( void * arg ){
 	int *id = (int *) arg; 
 	while(1){
-
-		sem_wait(gen_mutex);
+		sem_wait(&escr_mutex);
 		if (escritas <= 0){
-			sem_post(gen_mutex);
+			sem_post(&escr_mutex);
 			break;
 		}
 		else{
 			EntraEscrita(*id); 
 			escritas--;
 			SaiEscrita(*id);
-			sem_post(gen_mutex);
+			sem_post(&escr_mutex);
 		}
 	}
 	pthread_exit(NULL);
@@ -95,6 +97,8 @@ int main (int argc, char *argv[]) {
 	escritas = atoi(argv[5]);
 
 	sem_init(&gen_mutex,0,1);
+	sem_init(&escr_mutex,0,1);
+	sem_init(&leit_mutex,0,1);
 
 	pthread_t threads[quant_escr + quant_leit]; 
 
