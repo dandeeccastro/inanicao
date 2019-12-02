@@ -51,7 +51,6 @@ void SaiLeitura(int id){
 }
 
 void EntraEscrita(int id){
-	pthread_mutex_lock(&mutex);
 	while (lendo > 0 && vez) {
 		escr_fila++;
 		pthread_cond_wait(&cond_escr, &mutex);
@@ -66,7 +65,6 @@ void EntraEscrita(int id){
 }
 
 void SaiEscrita(int id){
-
 	//escrevendo--;
 	if(escrevendo == 0) {
 		vez = 1;
@@ -74,8 +72,7 @@ void SaiEscrita(int id){
 	}
 	fprintf(log_file, "Esc %d saiu\n", id);
 	//pthread_cond_broadcast(&cond_leit);
-	pthread_mutex_unlock(&mutex);
-}
+}	
 
 void * Escritora ( void * arg ){
 	int * id = (int *) arg;
@@ -86,8 +83,10 @@ void * Escritora ( void * arg ){
 			pthread_cond_broadcast(&cond_leit);
 			break;
 		} else {*/
+			pthread_mutex_lock(&mutex);
 			EntraEscrita(*id);
 			SaiEscrita(*id);
+			pthread_mutex_unlock(&mutex);
 		//}
 	}
 	pthread_exit(NULL);
@@ -102,8 +101,10 @@ void * Leitora( void * arg ){
 			pthread_cond_signal(&cond_escr);
 			break;
 		} else {*/
+
 			EntraLeitura(*id);
 			SaiLeitura(*id);
+			
 		//}
 	}
 	pthread_exit(NULL);
@@ -133,9 +134,11 @@ int main( int argc, char * argv[]){
 	for (i = 0; i < (quant_leitoras + quant_escritoras); i++){
 		t = malloc(sizeof(int));
 		*t = i;
-		if ( i < quant_leitoras)
+		
+		if ( i < quant_leitoras){
+			printf("leitora : %d", *t);         
 			pthread_create( &threads[i], NULL, Leitora, (void *) t);
-		else 
+		}else 
 			pthread_create( &threads[i], NULL, Escritora, (void *) t);
 		free(t);
 	}
