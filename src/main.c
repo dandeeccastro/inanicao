@@ -18,9 +18,9 @@ void EntraLeitura(int id){
 	while (escrevendo > 0 && !vez) {
 		leit_fila++;
 		pthread_cond_wait(&cond_leit, &mutex);
-		leit_fila--;
+		lendo = leit_fila--;
 	}
-	lendo++;
+	//lendo++;
 	fprintf(log_file, "Leit %d entrou\n", id);
 	fprintf(log_file, "Leit %d leu %d\n", id, var_global);
 	pthread_mutex_unlock(&mutex);
@@ -41,11 +41,12 @@ void EntraLeitura(int id){
 //escr, ler
 void SaiLeitura(int id){
 	pthread_mutex_lock(&mutex);
-	lendo--;
+	//lendo--;
 	fprintf(log_file, "Leit %d saiu\n", id);
-	vez = 0;
-	if (lendo == 0) 
-		pthread_cond_signal(&cond_escr);
+	if (lendo == 0) {
+		vez = 0;
+		//pthread_cond_signal(&cond_escr);
+	}	
 	pthread_mutex_unlock(&mutex);
 }
 
@@ -54,58 +55,56 @@ void EntraEscrita(int id){
 	while (lendo > 0 && vez) {
 		escr_fila++;
 		pthread_cond_wait(&cond_escr, &mutex);
-		escr_fila--;
+		escrevendo = escr_fila--;
 	}
-	escrevendo++;
+	//escrevendo++;
 	fprintf(log_file, "Esc %d entrou\n", id);
 	fprintf(log_file, "Esc %d leu %d\n", id, var_global);
 	var_global = id;
 	fprintf(log_file, "Esc %d escreveu %d\n", id, var_global);	
-	pthread_mutex_unlock(&mutex);
+	
 }
 
 void SaiEscrita(int id){
 
-	pthread_mutex_lock(&mutex);
-	escrevendo--;
-	vez = 1;
+	//escrevendo--;
+	if(escrevendo == 0) {
+		vez = 1;
+		pthread_cond_signal(&cond_leit);
+	}
 	fprintf(log_file, "Esc %d saiu\n", id);
-	pthread_cond_broadcast(&cond_leit);
+	//pthread_cond_broadcast(&cond_leit);
 	pthread_mutex_unlock(&mutex);
 }
 
 void * Escritora ( void * arg ){
 	int * id = (int *) arg;
-	while (1) {
-		pthread_mutex_lock(&mutex);
-		num_escritas--;
-		if (num_escritas < 0){
+	int escritas = num_escritas;
+	while (escritas > 0) {
+		escritas--;
+		/*if (escritas < 0){
 			pthread_cond_broadcast(&cond_leit);
-			pthread_mutex_unlock(&mutex);
 			break;
-		} else {
-			pthread_mutex_unlock(&mutex);
+		} else {*/
 			EntraEscrita(*id);
 			SaiEscrita(*id);
-		}
+		//}
 	}
 	pthread_exit(NULL);
 }
 
 void * Leitora( void * arg ){
 	int * id = (int *) arg;
-	while (1) {
-		pthread_mutex_lock(&mutex);
-		num_leituras--;
-		if (num_leituras < 0){
-			pthread_mutex_unlock(&mutex);
+	int leituras = num_leituras;
+	while (leituras > 0) {
+		leituras--;
+		/*if (leituras < 0){
 			pthread_cond_signal(&cond_escr);
 			break;
-		} else {
-			pthread_mutex_unlock(&mutex);
+		} else {*/
 			EntraLeitura(*id);
 			SaiLeitura(*id);
-		}
+		//}
 	}
 	pthread_exit(NULL);
 }
@@ -131,7 +130,7 @@ int main( int argc, char * argv[]){
 	int i, * t;
 	pthread_t threads[quant_leitoras + quant_escritoras];
 
-	for (i = 0; i < quant_leitoras + quant_escritoras; i++){
+	for (i = 0; i < (quant_leitoras + quant_escritoras); i++){
 		t = malloc(sizeof(int));
 		*t = i;
 		if ( i < quant_leitoras)
