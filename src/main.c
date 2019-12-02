@@ -10,50 +10,30 @@ pthread_mutex_t mutex;
 pthread_cond_t cond_leit, cond_escr;
 int escr_fila = 0, leit_fila = 0, lendo = 0, escrevendo = 0;
 
-int vez = 0;
-// 0 = escr, 1 = leit
-void Barreira(int type){
-	pthread_mutex_lock(&mutex);
-	// sendo escritor, enquanto ainda tem gente lendo ou escrevendo eu espero
-	while (!type && (escrevendo > 0 && lendo > 0) ) { 
-		pthread_cond_wait(&cond_escr,&mutex);
-	}
-
-	// sendo leitor, enquanto ainda tem gente escrevendo, espero
-	while (type && escrevendo > 0){
-		pthread_cond_wait(&cond_leit, &mutex);
-	}
-
-	if (type && vez) {
-		pthread_cond_broadcast(&cond_leit);
-	} else if ( !type && !vez ){
-		pthread_cond_signal(&cond_escr);
-	}
-}
+int vez = 0; // escr = 0 | leit = 1
 
 void EntraLeitura(int id){
-	int var_local;
+
 	pthread_mutex_lock(&mutex);
-	if(escrevendo > 0) {leit_fila++;
-	//while(escrevendo > 0) { //verficando escritoras na fila
-		pthread_cond_wait(&cond_leit, &mutex);}
-	//}
-	
+	while (escrevendo > 0 && !vez) {
+		leit_fila++;
+		pthread_cond_wait(&cond_leit, &mutex);
+		leit_fila--;
+	}
+	lendo++;
+	fprintf(log_file, "Leit %d entrou\n", id);
+	fprintf(log_file, "Leit %d leu %d\n", id, var_global);
+	pthread_mutex_unlock(&mutex);
+
 	FILE *leit_file;
 	char *leit_filename;
 
-	fprintf(log_file, "Leit %d entrou\n", id);
-	fprintf(log_file, "Leit %d leu %d\n", id, var_global);
-
-	var_local = var_global;
-	pthread_mutex_unlock(&mutex);
-	
 	leit_file = calloc(sizeof(FILE*),1);
 	leit_filename = calloc(sizeof(char),20);
 
 	sprintf(leit_filename,"%d.txt",id);
 	leit_file = fopen(leit_filename, "a+");
-	fprintf(leit_file,"%d\n",var_local);
+	fprintf(leit_file,"%d\n",var_global);
 	fclose(leit_file);
 
 	free(leit_filename);
@@ -62,42 +42,35 @@ void EntraLeitura(int id){
 void SaiLeitura(int id){
 	pthread_mutex_lock(&mutex);
 	lendo--;
-	if (lendo == 0 ) {
-		escrevendo = escr_fila;
-		escr_fila = 0;
-		pthread_cond_signal(&cond_escr);
-	}
 	fprintf(log_file, "Leit %d saiu\n", id);
+	vez = 0;
+	if (lendo == 0) 
+		pthread_cond_signal(&cond_escr);
 	pthread_mutex_unlock(&mutex);
 }
 
 void EntraEscrita(int id){
 	pthread_mutex_lock(&mutex);
-	if(lendo > 0) {escr_fila++;
-	//while(lendo > 0){
-		pthread_cond_wait(&cond_escr, &mutex);}
-	//}
-
-    fprintf(log_file, "Esc %d entrou\n", id);
+	while (lendo > 0 && vez) {
+		escr_fila++;
+		pthread_cond_wait(&cond_escr, &mutex);
+		escr_fila--;
+	}
+	escrevendo++;
+	fprintf(log_file, "Esc %d entrou\n", id);
 	fprintf(log_file, "Esc %d leu %d\n", id, var_global);
-
 	var_global = id;
-
 	fprintf(log_file, "Esc %d escreveu %d\n", id, var_global);	
-
-	
+	pthread_mutex_unlock(&mutex);
 }
 
 void SaiEscrita(int id){
 
+	pthread_mutex_lock(&mutex);
 	escrevendo--;
-	if(escrevendo == 0 ) {
-		pthread_cond_broadcast(&cond_leit);
-		lendo = leit_fila;
-		leit_fila = 0;
-	}	
-	else pthread_cond_signal(&cond_leit);
+	vez = 1;
 	fprintf(log_file, "Esc %d saiu\n", id);
+	pthread_cond_broadcast(&cond_leit);
 	pthread_mutex_unlock(&mutex);
 }
 
@@ -107,13 +80,13 @@ void * Escritora ( void * arg ){
 		pthread_mutex_lock(&mutex);
 		num_escritas--;
 		if (num_escritas < 0){
+			pthread_cond_broadcast(&cond_leit);
 			pthread_mutex_unlock(&mutex);
 			break;
 		} else {
 			pthread_mutex_unlock(&mutex);
 			EntraEscrita(*id);
 			SaiEscrita(*id);
-
 		}
 	}
 	pthread_exit(NULL);
@@ -126,6 +99,7 @@ void * Leitora( void * arg ){
 		num_leituras--;
 		if (num_leituras < 0){
 			pthread_mutex_unlock(&mutex);
+			pthread_cond_signal(&cond_escr);
 			break;
 		} else {
 			pthread_mutex_unlock(&mutex);
@@ -164,6 +138,7 @@ int main( int argc, char * argv[]){
 			pthread_create( &threads[i], NULL, Leitora, (void *) t);
 		else 
 			pthread_create( &threads[i], NULL, Escritora, (void *) t);
+		free(t);
 	}
 
 	for (i = 0; i < quant_leitoras + quant_escritoras; i++)

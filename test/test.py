@@ -1,81 +1,59 @@
-# A "id"eia desse código é, baseado nos prints, val"id"ar as regras de negócio do sistema
-# Baseado nos logs, veremos se há alguma violação de regras, e se tiver poderemos
-# determinar o porquê dela ter acontec"id"o
+def CheckCountersForErrors(writer_counter, reader_counter, writer_streak, reader_streak):
+    if ( abs( writer_streak - reader_streak) ):
+        print('Inanição detectada!')
+    if ( writer_counter > 1 and reader_counter is 0):
+        print ('Concorrência entre escritores detectada')
+    elif ( writer_counter >= 1 and reader_counter >= 1):
+        print ('Concorrência entre leitores e escritores detectada')
+    print('')
 
-# Referência de Log
+def ValidateSharedVariableValue(command_line, previous_value):
+    current_value = command_line[3]
+    if ( int(previous_value) >= 0):
+        if (command_line[2] in 'leu' and previous_value != command_line[3]):
+            print('Thread leu um valor modificado! Condição de corrida!')
+        elif (command_line[0] in 'Esc' and command_line[2] in 'escreveu' and (command_line[1] != current_value)):
+            print('Escritor leu o que não escreveu')
+    return current_value
 
-# Esc 1 entrou
-# Var 2
-# Esc 1 saiu
-def ValidateSharedVariableValue(commandLine, previousValue):
-    currentValue = commandLine[3]
-    if(int(previousValue) >= 0):
-        if (commandLine[2] in 'leu' and previousValue != commandLine[3]):
-            print("Thread leu um valor modificado! Condição de corrida!")
-        elif (commandLine[0] in 'Esc' and commandLine[2] in 'escreveu' and (commandLine[1] != currentValue)):
-            print("Escritor leu o que não escreveu!")
-    return currentValue
-
-def CheckCountersForErrors(writerCounter, readerCounter, writerSequence, readerSequence):
-    if (abs(writerSequence - readerSequence) > 1):
-        print ("Inanição detectada!")
-    if (writerCounter > 1 and readerCounter is 0):
-        print ("Concorrência entre escritores detectada!")
-    elif (writerCounter >= 1 and readerCounter >= 1):
-        print ("Concorrência entre leitores e escritores detectada!")
-    print("")
-        
 def main():
-    # Declarando variáveis
-    escCounter = 0
-    leitCounter = 0
-    escSequence = 0
-    leitSequence = 0
-    variableValue = -1
+
+    people_inside_shared_value = []
+    readers_inside = 0
+    writers_inside = 0
+    reader_sequence = 0
+    writer_sequence = 0
+    shared_variable_value = -1
     i = 0
-    pessoasNaVariavel = []
 
-    # Pegando arquivo de log
-    logFileName = input("Nome do arquivo de log: ")
-    logFile = open(logFileName,'r')
+    log_file_name = input("Nome do arquivo de log: ")
+    log_file = open(log_file_name,'r')
 
-    # Iterando por cada linha do arquivo  de log
-    for line in logFile:
+    for line in log_file:
+        print('[Line ' + str(i + 1) + ']')
+        line_arr = line.rsplit()
 
-        print ("[Line " + str(i + 1) + "]")
-        workingLine = line.rsplit()
+        if (line_arr[2] in 'entrou'):
+            people_inside_shared_value.append(line_arr[0] + ' ' + line_arr[1])
+            if (line_arr[0] in 'Esc'):
+                writers_inside += 1
+                writer_sequence += 1
+            elif (line_arr[0] in 'Leit'):
+                readers_inside += 1
+                reader_sequence += 1
+        elif (line_arr[2] in 'saiu'):
+            people_inside_shared_value.remove(line_arr[0] + ' ' + line_arr[1])
+            if (line_arr[0] in 'Esc'):
+                writers_inside -= 1
+            elif (line_arr[0] in 'Leit'):
+                readers_inside -= 1
 
-        for pessoa in pessoasNaVariavel:
-            print(pessoa["type"],pessoa["id"])
-        # Pegando pessoas que estão acessando a var global
-        if (workingLine[2] in 'entrou'):
-            pessoasNaVariavel.append({"type":workingLine[0], "id":workingLine[1]})
-        elif (workingLine[2] in 'saiu'):
-            for j in range(0,len(pessoasNaVariavel)):
-                print(j,pessoasNaVariavel[j]['id'])
-                pessoa = pessoasNaVariavel[j]
-                if (pessoa['id'] is workingLine[1]):
-                    del pessoasNaVariavel[j]
+        if (len(line_arr) > 3):
+            shared_variable_value = ValidateSharedVariableValue(line_arr,shared_variable_value)
 
-        # Setando os contadores corretos para cada condição
-        if (workingLine[0] in "Esc" and workingLine[2] in "entrou"):
-            escCounter += 1
-            escSequence += 1
-        elif (workingLine[0] in "Esc" and workingLine[2] in "saiu"):
-            escCounter -= 1
-        if (workingLine[0] in "Leit" and workingLine[2] in "entrou"):
-            leitCounter += 1 
-            leitSequence += 1
-        elif (workingLine[0] in "Leit" and workingLine[2] in "saiu"):
-            leitCounter -= 1
+        for person in people_inside_shared_value:
+            print(person)
 
-        if (len(workingLine) > 3):
-            variableValue = ValidateSharedVariableValue(workingLine,variableValue)
-
-        # Quem está na var. global?
-
-        # Conferindo condições e finalizando loop
-        CheckCountersForErrors(escCounter, leitCounter, escSequence, leitSequence)
+        CheckCountersForErrors(writers_inside,readers_inside,writer_sequence,reader_sequence)
         i += 1
-
 main()
