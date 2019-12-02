@@ -45,11 +45,17 @@ def main():
         print ("[Line " + str(i + 1) + "]")
         workingLine = line.rsplit()
 
+        for pessoa in pessoasNaVariavel:
+            print(pessoa["type"],pessoa["id"])
         # Pegando pessoas que estão acessando a var global
-        if (workingLine[2] in "entrou"):
+        if (workingLine[2] in 'entrou'):
             pessoasNaVariavel.append({"type":workingLine[0], "id":workingLine[1]})
         elif (workingLine[2] in 'saiu'):
-            pessoasNaVariavel.remove({"type":workingLine[0], "id":workingLine[1]})
+            for j in range(0,len(pessoasNaVariavel)):
+                print(j,pessoasNaVariavel[j]['id'])
+                pessoa = pessoasNaVariavel[j]
+                if (pessoa['id'] is workingLine[1]):
+                    del pessoasNaVariavel[j]
 
         # Setando os contadores corretos para cada condição
         if (workingLine[0] in "Esc" and workingLine[2] in "entrou"):
@@ -67,8 +73,6 @@ def main():
             variableValue = ValidateSharedVariableValue(workingLine,variableValue)
 
         # Quem está na var. global?
-        for pessoa in pessoasNaVariavel:
-            print(pessoa["type"],pessoa["id"])
 
         # Conferindo condições e finalizando loop
         CheckCountersForErrors(escCounter, leitCounter, escSequence, leitSequence)
